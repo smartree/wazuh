@@ -7,8 +7,8 @@ info:
     \ the Wazuh infrastructure via the Wazuh Kibana app. Use the API to easily perform\
     \ everyday actions like adding an agent, restarting the manager(s) or agent(s)\
     \ or looking up syscheck details.\n"
-  version: '4.0.0'
-  x-revision: 4000
+  version: '4.1.0'
+  x-revision: 4100
   title: 'Wazuh API REST'
   license:
     name: 'GPL 2.0'
@@ -5051,8 +5051,8 @@ paths:
                     $ref: '#/components/schemas/BasicInfo'
               example:
                 title: "Wazuh API"
-                api_version: "v4.0.0"
-                revision: 4000
+                api_version: "v4.1.0"
+                revision: 4100
                 license_name: "GPL 2.0"
                 license_url: "https://github.com/wazuh/wazuh/blob/master/LICENSE"
                 hostname: "wazuh"

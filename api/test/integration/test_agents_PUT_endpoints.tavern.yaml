@@ -828,7 +828,7 @@ stages:
         Authorization: "Bearer {test_login_token}"
       params:
         list_agents: '005'
-        version: 4.0.0
+        version: 4.1.0
         force: true
     response:
       status_code: 200
