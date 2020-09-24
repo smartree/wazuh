@@ -47,7 +47,11 @@
 #define FIM_DB_FREE_TYPE(_func) (void (*)(void *))(_func)
 #define FIM_DB_CALLBACK_TYPE(_func) (void (*)(fdb_t *, void *, int,  void *))(_func)
 
-extern const char *schema_fim_sql;
+extern const char *schema_fim_file_sql;
+
+#ifdef WIN32
+extern const char *schema_fim_registry_sql;
+#endif
 
 /**
  * @brief Executes a simple query in a given database.

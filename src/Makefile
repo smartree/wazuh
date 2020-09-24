@@ -1431,7 +1431,7 @@ rootcheck.a: ${rootcheck_o_lib}
 #### syscheck ######
 
 
-syscheck_sql := syscheckd/db/schema_fim_db.sql
+syscheck_sql := $(wildcard syscheckd/db/*.sql)
 
 syscheck_c := $(wildcard syscheckd/*.c)
 syscheck_c += $(wildcard syscheckd/db/*.c)
@@ -1442,8 +1442,8 @@ syschecklib_o := $(syschecklib_c:.c=.o) $(syscheck_sql:.sql=.o)
 syscheck_o := $(syschecklib_o:.c=.o) $(syscheck_c:.c=.o) $(syscheck_sql:.sql=.o)
 syscheck_eventchannel_o := $(syscheck_c:.c=-event.o) $(syscheck_sql:.sql=.o)
 
-syscheckd/db/schema_fim_db.o: syscheckd/db/schema_fim_db.sql
-	${QUIET_CC}echo 'const char *schema_fim_sql = "'"`cat $< | tr -d \"\n\"`"'";' | ${MING_BASE}${CC} ${OSSEC_CFLAGS} -xc -c -o $@ -
+syscheckd/db/schema_%.o: syscheckd/db/schema_%.sql
+	${QUIET_CC}echo 'const char *'$(word 3, $(subst /, ,$(subst .,_,$<)))' = "'"`cat $< | tr -d \"\n\"`"'";' | ${MING_BASE}${CC} ${OSSEC_CFLAGS} -xc -c -o $@ -
 
 syscheckd/%.o: syscheckd/%.c
 	${OSSEC_CC} ${OSSEC_CFLAGS} -DARGV0=\"ossec-syscheckd\" -c $^ -o $@

@@ -16,6 +16,8 @@
 #define static
 #endif
 
+int fim_db_statements_from_sql_string(const char *source, sqlite3 *fim_db);
+
 const char *SQL_STMT[] = {
     // Files
 #ifdef WIN32
@@ -99,7 +101,7 @@ fdb_t *fim_db_init(int storage) {
         fim_db_clean();
     }
 
-    if (fim_db_create_file(path, schema_fim_sql, storage, &fim->db) < 0) {
+    if (fim_db_create_file(path, schema_fim_file_sql, storage, &fim->db) < 0) {
         goto free_fim;
     }
 
@@ -107,6 +109,12 @@ fdb_t *fim_db_init(int storage) {
         sqlite3_open_v2(path, &fim->db, SQLITE_OPEN_READWRITE, NULL)) {
         goto free_fim;
     }
+
+#ifdef WIN32
+    if (fim_db_statements_from_sql_string(schema_fim_registry_sql, fim->db)) {
+        goto free_fim;
+    }
+#endif
 
     if (fim_db_cache(fim)) {
         goto free_fim;
@@ -193,24 +201,15 @@ end:
     return retval;
 }
 
-int fim_db_create_file(const char *path, const char *source, const int storage, sqlite3 **fim_db) {
+int fim_db_statements_from_sql_string(const char *source, sqlite3 *fim_db) {
     const char *sql;
     const char *tail;
-
-    sqlite3 *db;
     sqlite3_stmt *stmt;
     int result;
 
-    if (sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL)) {
-        merror("Couldn't create SQLite database '%s': %s", path, sqlite3_errmsg(db));
-        sqlite3_close_v2(db);
-        return -1;
-    }
-
     for (sql = source; sql && *sql; sql = tail) {
-        if (sqlite3_prepare_v2(db, sql, -1, &stmt, &tail) != SQLITE_OK) {
-            merror("Error preparing statement '%s': %s", sql, sqlite3_errmsg(db));
-            sqlite3_close_v2(db);
+        if (sqlite3_prepare_v2(fim_db, sql, -1, &stmt, &tail) != SQLITE_OK) {
+            merror("Error preparing statement '%s': %s", sql, sqlite3_errmsg(fim_db));
             return -1;
         }
 
@@ -222,13 +221,28 @@ int fim_db_create_file(const char *path, const char *source, const int storage, 
         case SQLITE_DONE:
             break;
         default:
-            merror("Error stepping statement '%s': %s", sql, sqlite3_errmsg(db));
+            merror("Error stepping statement '%s': %s", sql, sqlite3_errmsg(fim_db));
             sqlite3_finalize(stmt);
-            sqlite3_close_v2(db);
             return -1;
         }
 
         sqlite3_finalize(stmt);
+    }
+    return 0;
+}
+
+int fim_db_create_file(const char *path, const char *source, const int storage, sqlite3 **fim_db) {
+    sqlite3 *db;
+
+    if (sqlite3_open_v2(path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL)) {
+        merror("Couldn't create SQLite database '%s': %s", path, sqlite3_errmsg(db));
+        sqlite3_close_v2(db);
+        return -1;
+    }
+
+    if (fim_db_statements_from_sql_string(source, db)) {
+        sqlite3_close_v2(db);
+        return -1;
     }
 
     if (storage == FIM_DB_MEMORY) {
